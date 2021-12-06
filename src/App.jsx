@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import './styles/App.css';
 import twitterLogo from './assets/twitter-logo.svg';
 import useCheckWallet from "./hooks/useWallet.jsx";
+import useCheckTotalNFTs from "./hooks/useCheckTotalNFTs.jsx";
 import { CONTRACT_ADDRESS } from "./data/constants.jsx"
 import EpicNft from './data/contract.abi.json';
 import { ethers } from "ethers";
 import Spinner from "./Spinner.jsx";
-
+import ErrorMessage from "./ErrorMessage.jsx";
+import PreviousNfts from "./PreviousNfts.jsx";
 // Constants
 const TWITTER_HANDLE = 'pagaia';
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
@@ -23,6 +25,9 @@ const App = () => {
 
   // when a new NFT has been minted
   const [minted, setMinted] = useState(null);
+  const totalNfts = useCheckTotalNFTs();
+  const [error, setError] = useState(null);
+
 
   // Render Methods
   const renderNotConnectedContainer = () => (
@@ -30,6 +35,7 @@ const App = () => {
       Connect to Wallet
     </button>
   );
+
 
   const askContractToMintNft = async () => {
 
@@ -67,7 +73,9 @@ const App = () => {
         console.log("Ethereum object doesn't exist!");
       }
     } catch (error) {
-      console.log(error)
+      console.log({ error })
+      setMinting(false);
+      setError(error);
     }
   }
 
@@ -95,6 +103,9 @@ const App = () => {
           <p className="sub-text">
             Here you can find a collection of NFTs
           </p>
+          <p className="italic text-pink-600 m-2">
+            Already {totalNfts && totalNfts.toString()} NFTs minted
+          </p>
           {renderButton()}
           {minted && <div className="twitter-links">
             <div><a href={`https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${minted.tokenId}`}>Look your NFT on OpenSea</a>
@@ -103,6 +114,8 @@ const App = () => {
               <a href={`https://rinkeby.rarible.com/token/${CONTRACT_ADDRESS}:${minted.tokenId}`}>Look your NFT on RinkBy</a>
             </div>
           </div>}
+          <ErrorMessage message={error && error.error && error.error.message} />
+          <PreviousNfts totalNfts={totalNfts} />
         </div>
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
